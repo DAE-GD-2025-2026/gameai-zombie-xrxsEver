@@ -801,3 +801,4 @@ FodyWeavers.xsd
 # Ignoring diversion related files
 .dvignore
 /.diversion
+.vsconfig
