@@ -39,6 +39,7 @@ public class JavidKhashayarZombieRuntime : ModuleRules
 				"Slate",
 				"SlateCore",
 				"AIModule",
+				"NavigationSystem",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

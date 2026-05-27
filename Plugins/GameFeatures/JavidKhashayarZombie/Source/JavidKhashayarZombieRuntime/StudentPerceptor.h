@@ -10,17 +10,26 @@
 #include "Perception/AISense_Damage.h"
 #include "StudentPerceptor.generated.h"
 
+class UHouseTracker;
+
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class JAVIDKHASHAYARZOMBIERUNTIME_API UStudentPerceptor : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this component's properties
 	UStudentPerceptor();
-	
+
 	virtual void BeginPlay() override;
 
 	UFUNCTION()
 	virtual void OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "House Detection")
+	FString HouseActorTag = TEXT("House");
+
+private:
+	UHouseTracker* HouseTrackerComp = nullptr;
+
+	bool IsHouse(AActor* Actor) const;
 };
