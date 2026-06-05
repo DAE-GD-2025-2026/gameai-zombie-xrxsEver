@@ -38,14 +38,17 @@ public:
 	
 	class APawn* GetPawnOwner() const { return PawnOwner; }
 
+	// Where the spiral begins, near the center
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spiral Movement")
-	float SpiralRadius = 2000.0f;
+	float SpiralStartRadius = 400.0f;
 
+	// Distance between successive loops of the spiral
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spiral Movement")
-	float SpiralRadiusIncrement = 100.0f;
+	float SpiralArmSpacing = 1200.0f;
 
+	// Distance between the waypoints we step through along the spiral
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spiral Movement")
-	float SpiralAngularVelocity = 45.0f;
+	float SpiralPointSpacing = 500.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spiral Movement")
 	float MovementSpeed = 600.0f;
@@ -64,6 +67,7 @@ private:
 	float CurrentAngle = 0.0f;
 	float CurrentRadius;
 	float CurrentPointReachTimer = 0.0f;
+	float SpiralPointTimer = 0.0f;
 	AActor* CurrentHouseTarget = nullptr;
 	UHouseTracker* HouseTrackerComp = nullptr;
 	class APawn* PawnOwner = nullptr;

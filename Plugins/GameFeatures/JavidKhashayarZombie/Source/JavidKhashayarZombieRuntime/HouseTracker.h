@@ -23,16 +23,29 @@ public:
 	void MarkHouseVisited(AActor* House);
 	void ResetVisitedHouses();
 
-	UPROPERTY(BlueprintReadOnly, Category = "House Tracking")
-	TArray<AActor*> HousesToVisit;
+	void DiscoverHouses();
+	bool IsHouseActor(AActor* Actor) const;
 
 	UPROPERTY(BlueprintReadOnly, Category = "House Tracking")
-	TArray<AActor*> VisitedHouses;
+	TArray<AActor*> KnownHouses;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "House Tracking")
-	float HouseVisitRadius = 250.0f;
+	FString HouseActorTag = TEXT("House");
 
-	// Added for multi-point exploration
+	// How many other houses must be visited before a house can be revisited
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "House Tracking")
+	int32 RevisitCooldownVisits = 15;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "House Tracking")
+	float RescanInterval = 3.0f;
+
 	UFUNCTION(BlueprintCallable, Category = "House Tracking")
 	TArray<FVector> GenerateExplorationPoints(AActor* House);
+
+private:
+	bool IsOnCooldown(AActor* House) const;
+
+	int32 VisitCounter = 0;
+	TMap<AActor*, int32> VisitedAtCount;
+	float RescanTimer = 0.0f;
 };

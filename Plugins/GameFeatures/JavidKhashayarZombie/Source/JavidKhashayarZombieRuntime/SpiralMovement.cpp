@@ -70,8 +70,9 @@ void USpiralMovement::InitializeSpiralMovement()
 	if (PawnOwner)
 	{
 		SpiralCenter = PawnOwner->GetActorLocation();
-		CurrentRadius = SpiralRadius;
+		CurrentRadius = SpiralStartRadius;
 		CurrentAngle = 0.0f;
+		SpiralPointTimer = 0.0f;
 	}
 }
 
@@ -98,16 +99,25 @@ void USpiralMovement::UpdateMovement(float DeltaTime)
 
 	if (CurrentState == EMovementState::Spiraling)
 	{
-		// Internal transition check removed as BT now drives this
-		// We still keep the spiraling logic
-		CurrentAngle += SpiralAngularVelocity * DeltaTime;
-		CurrentRadius += (SpiralRadiusIncrement / 360.0f) * SpiralAngularVelocity * DeltaTime;
-
+		// Progress driven: only step to the next point once we actually reached this one,
+		// otherwise the target runs away faster than we can move and we just circle.
 		FVector TargetPos = CalculateSpiralPosition(CurrentAngle, CurrentRadius);
 		MoveToPoint(TargetPos, DeltaTime);
 
+		float Dist = FVector::Dist2D(PawnOwner->GetActorLocation(), TargetPos);
+		SpiralPointTimer += DeltaTime;
+
 		GEngine->AddOnScreenDebugMessage(1, 0.05f, FColor::Blue,
-			FString::Printf(TEXT("Spiraling - Angle: %.1f, Radius: %.0f"), CurrentAngle, CurrentRadius));
+			FString::Printf(TEXT("Spiraling - Angle: %.0f, Radius: %.0f, Dist: %.0f"), CurrentAngle, CurrentRadius, Dist));
+
+		if (Dist <= StoppingDistance || SpiralPointTimer >= PointReachTimeout)
+		{
+			SpiralPointTimer = 0.0f;
+			// Even arc length spacing: smaller angular step as the radius grows
+			float StepDeg = FMath::RadiansToDegrees(SpiralPointSpacing / FMath::Max(CurrentRadius, 1.0f));
+			CurrentAngle += StepDeg;
+			CurrentRadius = SpiralStartRadius + (SpiralArmSpacing / 360.0f) * CurrentAngle;
+		}
 	}
 	else if (CurrentState == EMovementState::MovingToHouse)
 	{
