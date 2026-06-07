@@ -35,7 +35,10 @@ public:
 	void ExploreHouse(float DeltaTime);
 	void UpdateFacingDirection(const FVector& Direction);
 	void MoveToPoint(const FVector& TargetPoint, float DeltaTime, float AcceptanceRadius = -1.0f);
-	
+
+	// Let another task (e.g. item pickup) take over driving the pawn for a while
+	void SetMovementPaused(bool bPaused);
+
 	class APawn* GetPawnOwner() const { return PawnOwner; }
 
 	// Where the spiral begins, near the center
@@ -78,4 +81,6 @@ private:
 	FVector CurrentTargetPoint;
 
 	bool bIsMovingTowardsSpiralPoint = false;
+	bool bMovementPaused = false;
+	FVector LastMoveTarget = FVector(FLT_MAX);
 };

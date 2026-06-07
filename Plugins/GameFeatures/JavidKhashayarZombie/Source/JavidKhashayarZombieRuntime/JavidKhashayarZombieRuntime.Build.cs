@@ -40,7 +40,8 @@ public class JavidKhashayarZombieRuntime : ModuleRules
 				"SlateCore",
 				"AIModule",
 				"NavigationSystem",
-				// ... add private dependencies that you statically link with here ...	
+				"GameAI_Zombie",
+				// ... add private dependencies that you statically link with here ...
 			}
 			);
 		

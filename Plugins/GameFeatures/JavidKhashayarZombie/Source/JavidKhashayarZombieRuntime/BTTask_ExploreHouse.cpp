@@ -36,6 +36,14 @@ EBTNodeResult::Type UBTTask_ExploreHouse::ExecuteTask(UBehaviorTreeComponent& Ow
 		return EBTNodeResult::Failed;
 	}
 
+	// Already working a house? Resume where we left off instead of restarting the sweep
+	// (a pickup or a zombie may have interrupted us mid-house).
+	if (SpiralComp->CurrentState == EMovementState::MovingToHouse ||
+		SpiralComp->CurrentState == EMovementState::ExploringHouse)
+	{
+		return EBTNodeResult::InProgress;
+	}
+
 	if (!HouseTracker || !HouseTracker->HasHousesToVisit())
 	{
 		return EBTNodeResult::Failed;

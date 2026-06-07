@@ -26,6 +26,9 @@ public:
 	void DiscoverHouses();
 	bool IsHouseActor(AActor* Actor) const;
 
+	// Nearest house ignoring the revisit cooldown (used when fleeing to find a gun)
+	AActor* GetNearestKnownHouse() const;
+
 	UPROPERTY(BlueprintReadOnly, Category = "House Tracking")
 	TArray<AActor*> KnownHouses;
 

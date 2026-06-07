@@ -4,6 +4,7 @@
 #include "HouseTracker.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PawnMovementComponent.h"
+#include "Navigation/PathFollowingComponent.h"
 #include "DrawDebugHelpers.h"
 
 USpiralMovement::USpiralMovement()
@@ -62,7 +63,21 @@ void USpiralMovement::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 		HouseTrackerComp = GetOwner() ? GetOwner()->FindComponentByClass<UHouseTracker>() : nullptr;
 	}
 
+	if (bMovementPaused)
+	{
+		return;
+	}
+
 	UpdateMovement(DeltaTime);
+}
+
+void USpiralMovement::SetMovementPaused(bool bPaused)
+{
+	bMovementPaused = bPaused;
+	if (bPaused && AIControllerOwner)
+	{
+		AIControllerOwner->StopMovement();
+	}
 }
 
 void USpiralMovement::InitializeSpiralMovement()
@@ -150,6 +165,9 @@ void USpiralMovement::UpdateMovement(float DeltaTime)
 				}
 				else
 				{
+					// No reachable points - mark it visited so we don't keep coming back to it
+					HouseTrackerComp->MarkHouseVisited(CurrentHouseTarget);
+					CurrentHouseTarget = nullptr;
 					CurrentState = EMovementState::Spiraling;
 				}
 			}
@@ -176,6 +194,9 @@ void USpiralMovement::ExploreHouse(float DeltaTime)
 {
 	if (!PawnOwner || !CurrentHouseTarget || ExplorationPoints.Num() == 0)
 	{
+		if (HouseTrackerComp && CurrentHouseTarget)
+			HouseTrackerComp->MarkHouseVisited(CurrentHouseTarget);
+		CurrentHouseTarget = nullptr;
 		CurrentState = EMovementState::Spiraling;
 		return;
 	}
@@ -219,9 +240,15 @@ void USpiralMovement::MoveToPoint(const FVector& TargetPoint, float DeltaTime, f
 
 	if (AIControllerOwner)
 	{
-		// Use MoveToLocation which handles pathfinding via NavMesh
-		AIControllerOwner->MoveToLocation(TargetPoint, ActualAcceptanceRadius);
-		
+		// Only (re)issue the move when the target actually moved or we've stopped -
+		// re-requesting every frame restarts the path and makes the pawn stall.
+		if (FVector::DistSquared(TargetPoint, LastMoveTarget) > 50.f * 50.f ||
+			AIControllerOwner->GetMoveStatus() != EPathFollowingStatus::Moving)
+		{
+			AIControllerOwner->MoveToLocation(TargetPoint, ActualAcceptanceRadius);
+			LastMoveTarget = TargetPoint;
+		}
+
 		// Debug draw the current path/target
 		DrawDebugLine(GetWorld(), PawnOwner->GetActorLocation(), TargetPoint, FColor::Yellow, false, 0.05f, 0, 2.f);
 	}

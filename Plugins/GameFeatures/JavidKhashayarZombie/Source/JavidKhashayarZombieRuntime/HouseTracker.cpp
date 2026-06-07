@@ -134,6 +134,32 @@ bool UHouseTracker::HasHousesToVisit() const
 	return KnownHouses.Num() > 0;
 }
 
+AActor* UHouseTracker::GetNearestKnownHouse() const
+{
+	const AActor* Owner = GetOwner();
+	if (!Owner)
+		return nullptr;
+
+	const FVector MyLocation = Owner->GetActorLocation();
+	AActor* Nearest = nullptr;
+	float NearestDist = TNumericLimits<float>::Max();
+
+	for (AActor* House : KnownHouses)
+	{
+		if (!House)
+			continue;
+
+		const float Dist = FVector::DistSquared(MyLocation, House->GetActorLocation());
+		if (Dist < NearestDist)
+		{
+			NearestDist = Dist;
+			Nearest = House;
+		}
+	}
+
+	return Nearest;
+}
+
 void UHouseTracker::MarkHouseVisited(AActor* House)
 {
 	if (!House)
@@ -167,10 +193,10 @@ TArray<FVector> UHouseTracker::GenerateExplorationPoints(AActor* House)
 	const float UsableX = FMath::Max(Extent.X - MarginX, 0.f);
 	const float UsableY = FMath::Max(Extent.Y - MarginY, 0.f);
 
-	// Grid resolution scales with the house so big houses get more coverage
-	const float Spacing = 350.f;
-	const int32 CountX = FMath::Clamp(FMath::CeilToInt((UsableX * 2.f) / Spacing) + 1, 1, 6);
-	const int32 CountY = FMath::Clamp(FMath::CeilToInt((UsableY * 2.f) / Spacing) + 1, 1, 6);
+	// Coarse grid: a few points is enough since we grab items on the way (within item search range)
+	const float Spacing = 600.f;
+	const int32 CountX = FMath::Clamp(FMath::CeilToInt((UsableX * 2.f) / Spacing) + 1, 1, 3);
+	const int32 CountY = FMath::Clamp(FMath::CeilToInt((UsableY * 2.f) / Spacing) + 1, 1, 3);
 
 	UNavigationSystemV1* NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
 
@@ -194,7 +220,7 @@ TArray<FVector> UHouseTracker::GenerateExplorationPoints(AActor* House)
 				// Tight tolerance so we don't snap onto navmesh outside the walls
 				if (NavSys->ProjectPointToNavigation(Desired, NavLoc, FVector(80.f, 80.f, Extent.Z + 100.f)))
 				{
-					if (FVector::Dist2D(NavLoc.Location, Desired) <= 120.f)
+					if (FVector::Dist2D(NavLoc.Location, Desired) <= 160.f)
 					{
 						Points.Add(NavLoc.Location);
 						DrawDebugSphere(GetWorld(), NavLoc.Location, 40.f, 8, FColor::Yellow, false, 5.f);
@@ -207,6 +233,19 @@ TArray<FVector> UHouseTracker::GenerateExplorationPoints(AActor* House)
 				DrawDebugSphere(GetWorld(), Desired, 40.f, 8, FColor::Red, false, 5.f);
 			}
 		}
+	}
+
+	// Always have at least the center so a house is never skipped
+	if (Points.Num() == 0)
+	{
+		FVector Center = Origin;
+		if (NavSys)
+		{
+			FNavLocation NavLoc;
+			if (NavSys->ProjectPointToNavigation(Origin, NavLoc, FVector(200.f, 200.f, Extent.Z + 100.f)))
+				Center = NavLoc.Location;
+		}
+		Points.Add(Center);
 	}
 
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan,
