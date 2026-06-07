@@ -5,6 +5,9 @@
 #include "HouseTracker.h"
 #include "SpiralMovement.h"
 #include "POVVisualization.h"
+#include "ItemHandler.h"
+#include "ThreatHandler.h"
+#include "PurgeEscaper.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "GameFramework/Pawn.h"
@@ -41,6 +44,9 @@ void USurvivorComponentInjector::InjectComponents()
 	if (!Pawn->FindComponentByClass<UHouseTracker>()) bAllComponentsExist = false;
 	if (!Pawn->FindComponentByClass<USpiralMovement>()) bAllComponentsExist = false;
 	if (!Pawn->FindComponentByClass<UPOVVisualization>()) bAllComponentsExist = false;
+	if (!Pawn->FindComponentByClass<UItemHandler>()) bAllComponentsExist = false;
+	if (!Pawn->FindComponentByClass<UThreatHandler>()) bAllComponentsExist = false;
+	if (!Pawn->FindComponentByClass<UPurgeEscaper>()) bAllComponentsExist = false;
 
 	if (bAllComponentsExist)
 	{
@@ -62,6 +68,9 @@ void USurvivorComponentInjector::InjectComponents()
 	SetupAIPerceptionComponent();
 	SetupStudentPerceptor();
 	SetupPOVVisualization();
+	SetupItemHandler();
+	SetupThreatHandler();
+	SetupPurgeEscaper();
 
 	bComponentsInjected = true;
 
@@ -196,4 +205,64 @@ void USurvivorComponentInjector::SetupPOVVisualization()
 
 	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green,
 		TEXT("POVVisualization injected"));
+}
+
+void USurvivorComponentInjector::SetupItemHandler()
+{
+	APawn* Pawn = Cast<APawn>(GetOwner());
+	if (!Pawn)
+		return;
+
+	if (Pawn->FindComponentByClass<UItemHandler>())
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow,
+			TEXT("ItemHandler already exists"));
+		return;
+	}
+
+	ItemHandler = NewObject<UItemHandler>(Pawn);
+	ItemHandler->RegisterComponent();
+
+	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green,
+		TEXT("ItemHandler injected"));
+}
+
+void USurvivorComponentInjector::SetupThreatHandler()
+{
+	APawn* Pawn = Cast<APawn>(GetOwner());
+	if (!Pawn)
+		return;
+
+	if (Pawn->FindComponentByClass<UThreatHandler>())
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow,
+			TEXT("ThreatHandler already exists"));
+		return;
+	}
+
+	ThreatHandler = NewObject<UThreatHandler>(Pawn);
+	ThreatHandler->RegisterComponent();
+
+	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green,
+		TEXT("ThreatHandler injected"));
+}
+
+void USurvivorComponentInjector::SetupPurgeEscaper()
+{
+	APawn* Pawn = Cast<APawn>(GetOwner());
+	if (!Pawn)
+		return;
+
+	if (Pawn->FindComponentByClass<UPurgeEscaper>())
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow,
+			TEXT("PurgeEscaper already exists"));
+		return;
+	}
+
+	PurgeEscaper = NewObject<UPurgeEscaper>(Pawn);
+	PurgeEscaper->RegisterComponent();
+
+	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green,
+		TEXT("PurgeEscaper injected"));
 }
