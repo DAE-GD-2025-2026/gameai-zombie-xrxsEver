@@ -9,6 +9,7 @@ what it does and how it grew.
 The survivor pawn is read-only, so I **inject** my components onto it at runtime
 (`SurvivorComponentInjector`, kicked off by the first BT node `BTTask_InjectComponents`).
 Those components find each other with `FindComponentByClass` — no hard wiring.
+<img width="500" height="281" alt="Sequence 01" src="https://github.com/user-attachments/assets/177deeff-adff-42d5-86a8-95ede5c2725f" />
 
 ## The behavior tree (priorities, highest first)
 1. **Escape Purge** — if standing in (or near) a purge zone, drop everything and run out.
